@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { Text, Button, Surface, useTheme, SegmentedButtons } from 'react-native-paper';
+import { Text, Button, useTheme, SegmentedButtons } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
@@ -27,7 +27,30 @@ export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    handleLanguageSelect('tr');
+    const initializeLanguage = async () => {
+      try {
+        const storedPrefs = await AsyncStorage.getItem('userPreferences');
+        if (storedPrefs) {
+          const { language, currency } = JSON.parse(storedPrefs);
+          if (language) {
+            handleLanguageSelect(language);
+          }
+          if (currency) {
+            handleCurrencySelect(currency);
+          }
+        } else {
+          // Default to Turkish
+          handleLanguageSelect('tr');
+          handleCurrencySelect('TRY');
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+        handleLanguageSelect('tr');
+        handleCurrencySelect('TRY');
+      }
+    };
+
+    initializeLanguage();
   }, []);
 
   const handleLanguageSelect = (lang) => {
@@ -71,91 +94,111 @@ export default function OnboardingScreen() {
 
   const renderLanguageStep = () => (
     <View style={styles.stepContainer}>
-      <Text variant="headlineMedium" style={styles.title}>
-        {t('selectLanguage')}
-      </Text>
-      <Surface style={styles.optionsContainer} elevation={2}>
-        {LANGUAGES.map((lang) => (
-          <Button
-            key={lang.value}
-            mode={selectedLanguage === lang.value ? 'contained' : 'outlined'}
-            onPress={() => handleLanguageSelect(lang.value)}
-            style={styles.optionButton}
-          >
-            {lang.label}
-          </Button>
-        ))}
-      </Surface>
+      <View style={styles.contentContainer}>
+        <Text variant="headlineMedium" style={styles.title}>
+          {t('selectLanguage')}
+        </Text>
+        <View style={styles.optionsContainer}>
+          <View style={styles.buttonContainer}>
+            {LANGUAGES.map((lang) => (
+              <Button
+                key={lang.value}
+                mode={selectedLanguage === lang.value ? 'contained' : 'outlined'}
+                onPress={() => handleLanguageSelect(lang.value)}
+                style={[styles.optionButton, styles.languageButton]}
+                contentStyle={[styles.buttonContent, styles.languageButtonContent]}
+                labelStyle={styles.buttonLabel}
+              >
+                {lang.label}
+              </Button>
+            ))}
+          </View>
+        </View>
+      </View>
     </View>
   );
 
   const renderCurrencyStep = () => {
     const currencyEntries = Object.entries(CURRENCIES);
     const sortedCurrencies = [
-      // Put TRY first
       currencyEntries.find(([code]) => code === 'TRY'),
-      // Then add all other currencies
       ...currencyEntries.filter(([code]) => code !== 'TRY'),
-    ].filter(Boolean); // Remove any undefined entries
+    ].filter(Boolean);
 
     return (
       <View style={styles.stepContainer}>
-        <Text variant="headlineMedium" style={styles.title}>
-          {t('selectCurrency')}
-        </Text>
-        <Surface style={styles.optionsContainer} elevation={2}>
-          <ScrollView style={styles.currencyList}>
-            {sortedCurrencies.map(([code, currency]) => (
-              <Button
-                key={code}
-                mode={selectedCurrency === code ? 'contained' : 'outlined'}
-                onPress={() => handleCurrencySelect(code)}
-                style={styles.optionButton}
-              >
-                {`${currency.symbol} ${code}`}
-              </Button>
-            ))}
-          </ScrollView>
-        </Surface>
+        <View style={styles.contentContainer}>
+          <Text variant="headlineMedium" style={styles.title}>
+            {t('selectCurrency')}
+          </Text>
+          <View style={styles.optionsContainer}>
+            <ScrollView 
+              style={styles.currencyList} 
+              contentContainerStyle={styles.currencyGridContainer}
+              showsVerticalScrollIndicator={false}
+            >
+              {sortedCurrencies.map(([code, currency]) => (
+                <Button
+                  key={code}
+                  mode={selectedCurrency === code ? 'contained' : 'outlined'}
+                  onPress={() => handleCurrencySelect(code)}
+                  style={[styles.optionButton, styles.currencyButton]}
+                  contentStyle={styles.buttonContent}
+                  labelStyle={styles.buttonLabel}
+                >
+                  {`${currency.symbol} ${code}`}
+                </Button>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
       </View>
     );
   };
 
   const renderThemeStep = () => (
     <View style={styles.stepContainer}>
-      <Text variant="headlineMedium" style={styles.title}>
-        {t('chooseTheme')}
-      </Text>
-      <Surface style={styles.optionsContainer} elevation={2}>
-        <Button
-          mode={!isDarkMode ? 'contained' : 'outlined'}
-          onPress={() => handleThemeSelect(false)}
-          style={styles.optionButton}
-          left={(props) => (
-            <MaterialCommunityIcons
-              name="white-balance-sunny"
-              size={24}
-              color={props.color}
-            />
-          )}
-        >
-          {t('lightTheme')}
-        </Button>
-        <Button
-          mode={isDarkMode ? 'contained' : 'outlined'}
-          onPress={() => handleThemeSelect(true)}
-          style={styles.optionButton}
-          left={(props) => (
-            <MaterialCommunityIcons
-              name="weather-night"
-              size={24}
-              color={props.color}
-            />
-          )}
-        >
-          {t('darkTheme')}
-        </Button>
-      </Surface>
+      <View style={styles.contentContainer}>
+        <Text variant="headlineMedium" style={styles.title}>
+          {t('chooseTheme')}
+        </Text>
+        <View style={styles.optionsContainer}>
+          <View style={styles.buttonContainer}>
+            <Button
+              mode={!isDarkMode ? 'contained' : 'outlined'}
+              onPress={() => handleThemeSelect(false)}
+              style={[styles.optionButton, styles.fixedWidthButton]}
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              left={(props) => (
+                <MaterialCommunityIcons
+                  name="white-balance-sunny"
+                  size={24}
+                  color={props.color}
+                />
+              )}
+            >
+              {t('lightTheme')}
+            </Button>
+            <Button
+              mode={isDarkMode ? 'contained' : 'outlined'}
+              onPress={() => handleThemeSelect(true)}
+              style={[styles.optionButton, styles.fixedWidthButton]}
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              left={(props) => (
+                <MaterialCommunityIcons
+                  name="weather-night"
+                  size={24}
+                  color={props.color}
+                />
+              )}
+            >
+              {t('darkTheme')}
+            </Button>
+          </View>
+        </View>
+      </View>
     </View>
   );
 
@@ -212,48 +255,94 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: 'white',
     justifyContent: 'space-between',
   },
   stepContainer: {
     flex: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 40,
+  },
+  contentContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   welcomeTitle: {
     textAlign: 'center',
-    marginTop: 60,
-    marginBottom: 24,
-    fontSize: 28,
+    marginTop: '5%',
+    marginBottom: '5%',
+    fontSize: 32,
     fontWeight: 'bold',
   },
   title: {
     marginBottom: 32,
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 28,
   },
   optionsContainer: {
-    padding: 16,
-    borderRadius: 8,
     width: '100%',
     maxWidth: 400,
+    alignItems: 'center',
     marginVertical: 16,
-    elevation: 2,
   },
   optionButton: {
     marginVertical: 8,
-    paddingVertical: 8,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    textAlign: 'center',
+    width: '100%',
   },
   currencyList: {
-    maxHeight: 300,
+    width: '100%',
+    maxHeight: '60vh',
+  },
+  currencyGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingHorizontal: 8,
+  },
+  currencyButton: {
+    width: '45%',
+    margin: '2.5%',
+    minWidth: 150,
   },
   navigationButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 16,
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
   },
   navButton: {
     minWidth: 120,
+  },
+  fixedWidthButton: {
+    width: '100%',
+    maxWidth: 200,
+  },
+  buttonContent: {
+    height: 48,
+    justifyContent: 'center',
+  },
+  languageButton: {
+    width: 200,
+    minWidth: 200,
+    marginHorizontal: 0,
+    marginVertical: 8,
+  },
+  languageButtonContent: {
+    minWidth: 200,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
 });

@@ -6,9 +6,35 @@ import { LanguageProvider } from '../context/LanguageContext';
 import { AppThemeProvider, useAppTheme } from '../theme/theme';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useSegments } from 'expo-router';
 
 function RootLayoutContent() {
   const { theme, isDarkMode } = useAppTheme();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    checkOnboarding();
+  }, []);
+
+  const checkOnboarding = async () => {
+    try {
+      const hasCompletedOnboarding = await AsyncStorage.getItem('hasCompletedOnboarding');
+      
+      // If we're not on the onboarding screen and haven't completed onboarding
+      if (!segments.includes('onboarding') && hasCompletedOnboarding !== 'true') {
+        router.replace('/onboarding');
+      }
+      // If we're on onboarding screen but have completed it
+      else if (segments.includes('onboarding') && hasCompletedOnboarding === 'true') {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

@@ -45,27 +45,20 @@ export function TransactionsProvider({ children }) {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [stored, storedCurrency, userPreferences] = await Promise.all([
+        const [stored, userPreferences] = await Promise.all([
           loadTransactions(),
-          AsyncStorage.getItem('selectedCurrency'),
           AsyncStorage.getItem('userPreferences')
         ]);
 
         dispatch({ type: 'SET_TRANSACTIONS', payload: stored });
         
-        // First check userPreferences (set during onboarding)
+        // Check userPreferences (set during onboarding)
         if (userPreferences) {
           const { currency } = JSON.parse(userPreferences);
           if (currency) {
             setSelectedCurrency(currency);
             await AsyncStorage.setItem('selectedCurrency', currency);
-            return;
           }
-        }
-        
-        // Fall back to stored currency if available
-        if (storedCurrency) {
-          setSelectedCurrency(storedCurrency);
         }
       } catch (error) {
         console.error('Error loading initial data:', error);
@@ -81,12 +74,19 @@ export function TransactionsProvider({ children }) {
     saveTransactions(state.transactions);
   }, [state.transactions]);
 
-  // Handle currency changes - now just updates the display currency
+  // Handle currency changes
   const handleCurrencyChange = async (newCurrency) => {
     if (newCurrency === selectedCurrency) return;
 
     try {
-      await AsyncStorage.setItem('selectedCurrency', newCurrency);
+      // Update both selectedCurrency and userPreferences
+      await Promise.all([
+        AsyncStorage.setItem('selectedCurrency', newCurrency),
+        AsyncStorage.setItem('userPreferences', JSON.stringify({
+          ...(await AsyncStorage.getItem('userPreferences').then(prefs => JSON.parse(prefs) || {})),
+          currency: newCurrency
+        }))
+      ]);
       setSelectedCurrency(newCurrency);
     } catch (error) {
       console.error('Error changing currency:', error);
