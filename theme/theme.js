@@ -103,10 +103,12 @@ export function ThemeProvider({ children }) {
   );
 }
 
+export { ThemeProvider as AppThemeProvider };
+
 export function useAppTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useAppTheme must be used within a ThemeProvider');
   }
   return context;
-}
+} 
