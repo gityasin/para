@@ -1,19 +1,11 @@
 import React, { createContext, useContext, useState } from 'react';
-import { MD3LightTheme, MD3DarkTheme, adaptNavigationTheme, Provider as PaperProvider } from 'react-native-paper';
-import { DefaultTheme as NavigationDefaultTheme, DarkTheme as NavigationDarkTheme } from '@react-navigation/native';
+import { MD3LightTheme, MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 import { useColorScheme } from 'react-native';
-
-const { LightTheme, DarkTheme } = adaptNavigationTheme({
-  reactNavigationLight: NavigationDefaultTheme,
-  reactNavigationDark: NavigationDarkTheme,
-});
 
 const lightTheme = {
   ...MD3LightTheme,
-  ...LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    ...LightTheme.colors,
     primary: '#3B82F6',
     secondary: '#F59E0B',
     background: '#FFFFFF',
@@ -60,10 +52,8 @@ const lightTheme = {
 
 const darkTheme = {
   ...MD3DarkTheme,
-  ...DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    ...DarkTheme.colors,
     primary: '#60A5FA',
     secondary: '#FBBF24',
     background: '#111827',

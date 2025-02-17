@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
 import { Surface, Text, List, useTheme, TouchableRipple, Menu, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { formatCurrency } from '../services/format';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -21,7 +21,7 @@ export default function TransactionItem({ transaction, onPress }) {
   const { colors } = theme;
   const { dispatch, selectedCurrency } = useTransactions();
   const [menuVisible, setMenuVisible] = React.useState(false);
-  const navigation = useNavigation();
+  const router = useRouter();
   const { t } = useLanguage();
 
   const isExpense = transaction.amount < 0;
@@ -44,11 +44,11 @@ export default function TransactionItem({ transaction, onPress }) {
 
   const handleEdit = () => {
     setMenuVisible(false);
-    navigation.navigate('AddTransaction', {
-      isEditing: true,
-      transaction: {
-        ...transaction,
-        amount: Math.abs(transaction.amount),
+    router.push({
+      pathname: '/add-transaction',
+      params: {
+        isEditing: true,
+        transaction: JSON.stringify(transaction),
       },
     });
   };
