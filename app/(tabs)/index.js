@@ -123,11 +123,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
+    position: 'relative',
   },
   listContent: {
     padding: 16,
-    paddingBottom: 80, // Space for FAB
+    paddingBottom: 80,
     flexGrow: 1,
+    minHeight: '100%',
   },
   summaryContainer: {
     padding: 16,

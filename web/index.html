@@ -93,10 +93,13 @@
     </style>
   </head>
   <body>
-    <div id="root">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-      </div>
-    </div>
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/para/service-worker.js');
+        });
+      }
+    </script>
   </body>
 </html> 

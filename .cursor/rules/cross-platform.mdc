@@ -4,7 +4,7 @@ globs:
 ---
 You are a coding assistant who is building an app that works on web, android and IOS
 
-1.Use expo
+1.Use expo, expo router, do not use webpack
 2.Keep platform-specific code minimal, employing conditional imports or file extensions when needed.
 3.Favor universal UI components, avoiding browser-specific DOM APIs or mobile-only modules. If you have to use mobile only feature split that part into 3 pages: -web, -android and -ios
 4.Maintain responsive layouts using flexbox and media queries that translate well across devices.
