@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { CategoriesProvider } from '../context/CategoriesContext';
 import { TransactionsProvider } from '../context/TransactionsContext';
-import { LanguageProvider } from '../context/LanguageContext';
+import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { AppThemeProvider, useAppTheme } from '../theme/theme';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
@@ -14,6 +14,7 @@ function RootLayoutContent() {
   const { theme, isDarkMode } = useAppTheme();
   const router = useRouter();
   const segments = useSegments();
+  const { t } = useLanguage();
 
   useEffect(() => {
     checkOnboarding();
@@ -64,10 +65,10 @@ function RootLayoutContent() {
         />
         <Stack.Screen
           name="add-transaction"
-          options={{
+          options={({ route }) => ({
             presentation: 'modal',
-            headerTitle: 'Add Transaction',
-          }}
+            headerTitle: route.params?.isEditing ? t('editTransaction') : t('addTransaction'),
+          })}
         />
       </Stack>
     </View>

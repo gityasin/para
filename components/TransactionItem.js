@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
-import { Surface, Text, List, useTheme, TouchableRipple, Menu, IconButton } from 'react-native-paper';
+import { Surface, Text, List, useTheme, Button, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
 import { useRouter } from 'expo-router';
@@ -17,12 +17,13 @@ const CATEGORY_ICONS = {
   Other: 'dots-horizontal',
 };
 
-export default function TransactionItem({ transaction, onPress }) {
+const TransactionItem = ({ transaction }) => {
   const theme = useTheme();
   const { colors } = theme;
   const { dispatch, selectedCurrency } = useTransactions();
   const { getCategoryColor } = useCategories();
-  const [menuVisible, setMenuVisible] = React.useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -38,11 +39,11 @@ export default function TransactionItem({ transaction, onPress }) {
   });
 
   const handleDelete = () => {
+    setMenuVisible(false);
     dispatch({
       type: 'DELETE_TRANSACTION',
       payload: transaction.id,
     });
-    setMenuVisible(false);
   };
 
   const handleEdit = () => {
@@ -56,24 +57,22 @@ export default function TransactionItem({ transaction, onPress }) {
     });
   };
 
-  const dynamicStyles = {
-    menuContent: {
-      backgroundColor: colors.surface,
+  const handleMenuPress = (event) => {
+    if (Platform.OS === 'web') {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const scrollY = window.scrollY || window.pageYOffset;
+      setMenuPosition({
+        top: rect.bottom + scrollY,
+        right: window.innerWidth - rect.right,
+      });
     }
+    setMenuVisible(true);
   };
 
   return (
     <Surface style={styles.surface} elevation={1}>
       <View style={styles.container}>
-        <TouchableRipple
-          onPress={(e) => {
-            if (!menuVisible) {
-              onPress();
-            }
-          }}
-          style={[styles.touchable, { flex: 1 }]}
-          disabled={menuVisible}
-        >
+        <View style={{ flex: 1 }}>
           <List.Item
             title={transaction.description}
             description={`${transaction.category} • ${formattedDate}`}
@@ -110,62 +109,62 @@ export default function TransactionItem({ transaction, onPress }) {
             titleStyle={styles.title}
             descriptionStyle={[styles.description, { color: colors.textSecondary }]}
           />
-        </TouchableRipple>
-        
-        <View style={styles.menuContainer}>
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={
-              <TouchableOpacity 
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setMenuVisible(true);
-                }}
-                style={styles.menuButton}
-              >
-                <MaterialCommunityIcons
-                  name="dots-vertical"
-                  size={24}
-                  color={colors.primary}
-                />
-              </TouchableOpacity>
-            }
-            contentStyle={[dynamicStyles.menuContent]}
-            anchorPosition="bottom"
-            statusBarHeight={0}
-          >
-            <Menu.Item
-              onPress={(e) => {
-                e.stopPropagation();
-                handleEdit();
-              }}
-              title={t('edit')}
-              leadingIcon={props => (
-                <MaterialCommunityIcons
-                  name="pencil"
-                  size={20}
-                  color={props.color}
-                />
-              )}
-            />
-            <Menu.Item
-              onPress={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              title={t('delete')}
-              leadingIcon={props => (
-                <MaterialCommunityIcons
-                  name="delete"
-                  size={20}
-                  color={props.color}
-                />
-              )}
-            />
-          </Menu>
         </View>
+
+        <TouchableOpacity 
+          onPress={handleMenuPress}
+          style={styles.menuButton}
+        >
+          <MaterialCommunityIcons
+            name="dots-vertical"
+            size={24}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
       </View>
+
+      <Portal>
+        {menuVisible && (
+          <>
+            <TouchableOpacity 
+              style={styles.backdrop} 
+              onPress={() => setMenuVisible(false)} 
+              activeOpacity={1}
+            />
+            <View 
+              style={[
+                styles.dropdown, 
+                { 
+                  backgroundColor: colors.surface,
+                  top: menuPosition.top,
+                  right: menuPosition.right,
+                }
+              ]}
+            >
+              <TouchableOpacity 
+                style={styles.dropdownItem}
+                onPress={() => {
+                  handleEdit();
+                  setMenuVisible(false);
+                }}
+              >
+                <MaterialCommunityIcons name="pencil" size={20} color={colors.primary} />
+                <Text style={[styles.dropdownText, { color: colors.text }]}>{t('edit')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.dropdownItem}
+                onPress={() => {
+                  handleDelete();
+                  setMenuVisible(false);
+                }}
+              >
+                <MaterialCommunityIcons name="delete" size={20} color={colors.error} />
+                <Text style={[styles.dropdownText, { color: colors.text }]}>{t('delete')}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </Portal>
     </Surface>
   );
 }
@@ -174,14 +173,12 @@ const styles = StyleSheet.create({
   surface: {
     marginBottom: 8,
     borderRadius: 8,
-    overflow: 'hidden',
+    position: 'relative',
+    zIndex: 1, // Add base z-index
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  touchable: {
-    flex: 1,
   },
   title: {
     fontWeight: '500',
@@ -198,18 +195,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  menuContainer: {
-    paddingRight: 8,
+  menuWrapper: {
+    position: 'relative',
   },
   menuButton: {
     padding: 8,
+    marginRight: 4,
   },
-  menu: {
-    position: 'absolute',
-    right: 8,
-    zIndex: 3,
+  backdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 999,
+  },
+  dropdown: {
+    position: 'fixed',
+    minWidth: 150,
+    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 4,
+    zIndex: 1000,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+    } : {}),
   },
   recurringIcon: {
     marginRight: 4,
   },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 8,
+  },
+  dropdownText: {
+    fontSize: 16,
+    marginLeft: 8,
+  },
 });
+
+export default TransactionItem;

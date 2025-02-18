@@ -54,6 +54,7 @@ const CustomSnackbar = ({ visible, message, style }) => {
 export default function AddTransactionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const initialValuesRef = React.useRef(null);
   
   const { dispatch, selectedCurrency } = useTransactions();
   const { categories, addCategory } = useCategories();
@@ -74,12 +75,12 @@ export default function AddTransactionScreen() {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
 
   useEffect(() => {
-    if (isEditing && existingTransaction) {
+    if (isEditing && existingTransaction && !initialValuesRef.current) {
+      initialValuesRef.current = existingTransaction;
       setDescription(existingTransaction.description || '');
       setAmount(existingTransaction.amount ? Math.abs(existingTransaction.amount).toString() : '');
       setCategory(existingTransaction.category || '');
       setTransactionType(existingTransaction.amount < 0 ? 'expense' : 'income');
-      // Fix: Properly set isRecurring from existingTransaction, with explicit boolean conversion
       setIsRecurring(Boolean(existingTransaction.isRecurring));
     }
   }, [isEditing, existingTransaction]);
@@ -119,21 +120,20 @@ export default function AddTransactionScreen() {
     const transactionData = {
       description: description.trim(),
       amount: finalAmount,
-      date: isEditing ? existingTransaction.date : new Date().toISOString().split('T')[0],
+      date: isEditing ? initialValuesRef.current.date : new Date().toISOString().split('T')[0],
       category: trimmedCategory,
       isRecurring,
       type: transactionType,
     };
 
-    if (isEditing && existingTransaction) {
+    if (isEditing && initialValuesRef.current) {
+      const updatePayload = {
+        id: initialValuesRef.current.id,
+        ...transactionData,
+      };
       dispatch({
         type: 'UPDATE_TRANSACTION',
-        payload: {
-          ...existingTransaction,
-          ...transactionData,
-          id: existingTransaction.id,
-          isRecurring: isRecurring // Ensure isRecurring is explicitly set
-        },
+        payload: updatePayload,
       });
     } else {
       const newTransactionId = Date.now().toString();
@@ -157,10 +157,6 @@ export default function AddTransactionScreen() {
     <>
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.content}>
-          <Text variant="headlineMedium" style={[styles.title, { color: colors.primary }]}>
-            {isEditing ? t('editTransaction') : t('addTransaction')}
-          </Text>
-
           <SegmentedButtons
             value={transactionType}
             onValueChange={setTransactionType}

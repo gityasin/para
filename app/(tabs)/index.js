@@ -88,15 +88,6 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <TransactionItem 
             transaction={item}
-            onPress={() => {
-              router.push({
-                pathname: '/add-transaction',
-                params: {
-                  isEditing: true,
-                  transaction: JSON.stringify(item),
-                }
-              });
-            }}
           />
         )}
         ListHeaderComponent={renderHeader}
