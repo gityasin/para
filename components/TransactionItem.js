@@ -6,6 +6,7 @@ import { useTransactions } from '../context/TransactionsContext';
 import { useRouter } from 'expo-router';
 import { formatCurrency } from '../services/format';
 import { useLanguage } from '../context/LanguageContext';
+import { useCategories } from '../context/CategoriesContext';
 
 const CATEGORY_ICONS = {
   Food: 'silverware-fork-knife',
@@ -20,6 +21,7 @@ export default function TransactionItem({ transaction, onPress }) {
   const theme = useTheme();
   const { colors } = theme;
   const { dispatch, selectedCurrency } = useTransactions();
+  const { getCategoryColor } = useCategories();
   const [menuVisible, setMenuVisible] = React.useState(false);
   const router = useRouter();
   const { t } = useLanguage();
@@ -27,6 +29,7 @@ export default function TransactionItem({ transaction, onPress }) {
   const isExpense = transaction.amount < 0;
   const amount = Math.abs(transaction.amount);
   const icon = CATEGORY_ICONS[transaction.category] || CATEGORY_ICONS.Other;
+  const categoryColor = getCategoryColor(transaction.category);
 
   const formattedDate = new Date(transaction.date).toLocaleDateString(undefined, {
     year: 'numeric',
@@ -78,7 +81,7 @@ export default function TransactionItem({ transaction, onPress }) {
               <MaterialCommunityIcons
                 name={icon}
                 size={24}
-                color={colors.primary}
+                color={categoryColor}
                 style={props.style}
               />
             )}

@@ -5,6 +5,7 @@ import { VictoryPie } from 'victory-native';
 import { useTransactions } from '../../context/TransactionsContext';
 import { formatCurrency } from '../../services/format';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCategories } from '../../context/CategoriesContext';
 
 const CHART_TYPES = [
   { value: 'pie', label: 'pieChart' },
@@ -16,6 +17,7 @@ export default function ChartScreen() {
   const theme = useTheme();
   const { colors } = theme;
   const { t } = useLanguage();
+  const { getCategoryColor } = useCategories();
   const [chartType, setChartType] = useState('pie');
 
   // Calculate total expenses and group by category
@@ -27,21 +29,21 @@ export default function ChartScreen() {
       return acc;
     }, {});
 
-  const total = Object.values(expensesByCategory).reduce((sum, amount) => sum + amount, 0);
+  const sortedChartData = Object.entries(expensesByCategory)
+    .sort(([, a], [, b]) => b - a)
+    .map(([category, amount], index, array) => {
+      // Add a tiny fraction based on position to ensure perfect fitting
+      const adjustedAmount = amount * (1 + (index / (array.length * 1000)));
+      return {
+        x: category,
+        y: adjustedAmount,
+        originalAmount: amount,
+        color: getCategoryColor(category)
+      };
+    });
 
-  const chartData = Object.entries(expensesByCategory).map(([category, amount]) => ({
-    x: category,
-    y: amount,
-  }));
-
-  const colorScale = [
-    colors.primary,
-    colors.secondary,
-    colors.error,
-    colors.success,
-    colors.warning,
-    colors.info,
-  ];
+  // Use originalAmount for total and percentage calculations
+  const total = sortedChartData.reduce((sum, item) => sum + item.originalAmount, 0);
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -53,6 +55,46 @@ export default function ChartScreen() {
       </Text>
     </View>
   );
+
+  const renderSummary = () => {
+    if (total <= 0) return null;
+
+    return (
+      <Surface style={[styles.summaryContainer, { backgroundColor: colors.surface, width: '100%' }]} elevation={2}>
+        <Text variant="titleLarge" style={[styles.summaryTitle, { color: colors.text }]}>
+          {t('summary')}
+        </Text>
+        
+        <View style={styles.summaryList}>
+          {sortedChartData.map((item) => {
+            const percentage = ((item.originalAmount / total) * 100).toFixed(1);
+            return (
+              <View key={item.x} style={styles.summaryItem}>
+                <View style={styles.summaryLeftSection}>
+                  <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                  <Text style={[styles.summaryCategory, { color: colors.text }]}>{item.x}</Text>
+                </View>
+                <View style={styles.summaryRightSection}>
+                  <Text style={[styles.summaryPercentage, { color: colors.textSecondary }]}>
+                    {percentage}%
+                  </Text>
+                  <Text style={[styles.summaryAmount, { color: colors.text }]}>
+                    {formatCurrency(item.originalAmount, selectedCurrency)}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+          <View style={[styles.totalLine, { borderTopColor: colors.border }]}>
+            <Text style={[styles.totalText, { color: colors.text }]}>{t('total')}</Text>
+            <Text style={[styles.totalAmount, { color: colors.error }]}>
+              {formatCurrency(total, selectedCurrency)}
+            </Text>
+          </View>
+        </View>
+      </Surface>
+    );
+  };
 
   return (
     <ScrollView 
@@ -81,10 +123,16 @@ export default function ChartScreen() {
         {total > 0 ? (
           <>
             <VictoryPie
-              data={chartData}
-              colorScale={colorScale}
-              innerRadius={chartType === 'donut' ? 80 : 0}
-              padAngle={2}
+              data={sortedChartData.map(item => ({
+                ...item,
+                y: item.y + 0.0001
+              }))}
+              colorScale={sortedChartData.map(item => item.color)}
+              innerRadius={chartType === 'donut' ? 70 : 0}
+              radius={138}
+              padAngle={1.2}
+              cornerRadius={0}
+              labels={() => null}
               animate={{
                 duration: 1000,
                 onLoad: { duration: 500 }
@@ -94,29 +142,17 @@ export default function ChartScreen() {
               style={{
                 data: {
                   stroke: colors.background,
-                  strokeWidth: 1,
+                  strokeWidth: 2,
+                  fillOpacity: 1
                 },
               }}
             />
-
-            <View style={styles.legendContainer}>
-              {chartData.map((item, index) => (
-                <View key={item.x} style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: colorScale[index % colorScale.length] }]} />
-                  <View style={styles.legendText}>
-                    <Text style={[styles.legendCategory, { color: colors.text }]}>{item.x}</Text>
-                    <Text style={[styles.legendAmount, { color: colors.textSecondary }]}>
-                      {formatCurrency(item.y, selectedCurrency)}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
           </>
         ) : (
           renderEmptyState()
         )}
       </Surface>
+      {renderSummary()}
     </ScrollView>
   );
 }
@@ -151,29 +187,71 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 32,
   },
-  legendContainer: {
+  summaryContainer: {
+    padding: 16,
+    borderRadius: 8,
     marginTop: 16,
   },
-  legendItem: {
+  summaryTitle: {
+    marginBottom: 16,
+    fontWeight: '600',
+  },
+  summaryList: {
+    width: '100%',
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  summaryLeftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  legendColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  legendText: {
     flex: 1,
   },
-  legendCategory: {
-    fontSize: 14,
-    fontWeight: '500',
+  summaryRightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 180,
+    justifyContent: 'flex-end',
   },
-  legendAmount: {
-    fontSize: 12,
-    marginTop: 2,
+  summaryCategory: {
+    fontSize: 16,
+    marginLeft: 8,
+    flex: 1,
+  },
+  summaryAmount: {
+    fontSize: 16,
+    fontWeight: '500',
+    minWidth: 100,
+    textAlign: 'right',
+  },
+  summaryPercentage: {
+    fontSize: 14,
+    minWidth: 60,
+    textAlign: 'right',
+    marginRight: 8,
+  },
+  totalLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  },
+  totalText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });

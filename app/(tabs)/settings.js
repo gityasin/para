@@ -20,7 +20,7 @@ export default function SettingsScreen() {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const currencies = getAvailableCurrencies();
   const { selectedCurrency, handleCurrencyChange } = useTransactions();
-  const { categories, addCategory, removeCategory, updateCategory } = useCategories();
+  const { categories, addCategory, removeCategory, updateCategory, getCategoryColor } = useCategories();
   
   // Category management state
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -332,12 +332,15 @@ export default function SettingsScreen() {
                 <List.Item
                   title={category}
                   left={props => (
-                    <MaterialCommunityIcons
-                      name="tag"
-                      size={24}
-                      color={props.color}
-                      style={props.style}
-                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={[styles.categoryColor, { backgroundColor: getCategoryColor(category) }]} />
+                      <MaterialCommunityIcons
+                        name="tag"
+                        size={24}
+                        color={getCategoryColor(category)}
+                        style={[props.style, { marginLeft: 8 }]}
+                      />
+                    </View>
                   )}
                   right={() => (
                     <View style={styles.categoryActions}>
@@ -446,5 +449,10 @@ const styles = StyleSheet.create({
   },
   languageLabel: {
     fontSize: 16,
+  },
+  categoryColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });
