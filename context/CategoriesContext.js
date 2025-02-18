@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from './LanguageContext';
 
 const CATEGORIES_STORAGE_KEY = '@categories';
 const CATEGORY_COLORS_KEY = '@category_colors';
 
-const DEFAULT_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Other'];
+// Default category keys - these match the translation keys
+const DEFAULT_CATEGORY_KEYS = ['food', 'transport', 'shopping', 'bills', 'entertainment', 'other'];
 
 // A set of distinguishable colors
 const CATEGORY_COLORS = [
@@ -33,13 +35,9 @@ const CATEGORY_COLORS = [
 const CategoriesContext = createContext();
 
 export function CategoriesProvider({ children }) {
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState([]);
   const [categoryColors, setCategoryColors] = useState({});
-
-  useEffect(() => {
-    // Load categories and their colors from storage on mount
-    loadCategoriesAndColors();
-  }, []);
+  const { t } = useLanguage();
 
   const loadCategoriesAndColors = async () => {
     try {
@@ -48,7 +46,9 @@ export function CategoriesProvider({ children }) {
         AsyncStorage.getItem(CATEGORY_COLORS_KEY)
       ]);
 
-      let parsedCategories = DEFAULT_CATEGORIES;
+      // Get translated default categories
+      const translatedDefaultCategories = DEFAULT_CATEGORY_KEYS.map(key => t(key));
+      let parsedCategories = translatedDefaultCategories;
       let parsedColors = {};
 
       if (storedCategories) {
@@ -71,6 +71,11 @@ export function CategoriesProvider({ children }) {
       console.error('Error loading categories and colors:', error);
     }
   };
+
+  // Load categories on mount and when language changes
+  useEffect(() => {
+    loadCategoriesAndColors();
+  }, [t]); // Reload when translations change
 
   const saveCategoriesAndColors = async (newCategories, newColors) => {
     try {

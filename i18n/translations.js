@@ -11,6 +11,14 @@ export const translations = {
     update: 'Update',
     saveChanges: 'Save Changes',
     
+    // Categories
+    food: 'Food',
+    transport: 'Transport',
+    shopping: 'Shopping',
+    bills: 'Bills',
+    entertainment: 'Entertainment',
+    other: 'Other',
+    
     // Settings Screen
     appSettings: 'App Settings',
     darkMode: 'Dark Mode',
@@ -103,6 +111,14 @@ export const translations = {
     close: 'Kapat',
     update: 'Güncelle',
     saveChanges: 'Değişiklikleri Kaydet',
+    
+    // Categories
+    food: 'Yemek',
+    transport: 'Ulaşım',
+    shopping: 'Alışveriş',
+    bills: 'Faturalar',
+    entertainment: 'Eğlence',
+    other: 'Diğer',
     
     // Settings Screen
     appSettings: 'Uygulama Ayarları',
