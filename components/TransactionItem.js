@@ -80,7 +80,10 @@ const TransactionItem = ({ transaction }) => {
           onPress={handleEdit}
           style={({ hovered }) => [
             styles.transactionPress,
-            hovered && styles.transactionPressHovered
+            hovered && [
+              styles.transactionPressHovered,
+              { backgroundColor: 'rgba(0, 0, 0, 0.17)' }
+            ]
           ]}
         >
           <List.Item
@@ -228,7 +231,7 @@ const styles = StyleSheet.create({
     } : {}),
   },
   menuButtonHovered: {
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(0, 0, 0, 0.17)',
   },
   backdrop: {
     position: 'fixed',
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
     } : {}),
   },
   dropdownItemHovered: {
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(0, 0, 0, 0.17)',
   },
   dropdownText: {
     fontSize: 16,
@@ -282,7 +285,6 @@ const styles = StyleSheet.create({
     } : {}),
   },
   transactionPressHovered: {
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
     transform: [{scale: 1.002}],
   },
 });
