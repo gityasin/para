@@ -5,7 +5,7 @@ import { translations } from '../i18n/translations';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('tr'); // Set default to 'tr' instead of 'en'
 
   useEffect(() => {
     // Load saved language preference
@@ -14,6 +14,9 @@ export const LanguageProvider = ({ children }) => {
         const savedLanguage = await AsyncStorage.getItem('userLanguage');
         if (savedLanguage) {
           setLanguage(savedLanguage);
+        } else {
+          // If no language is saved, set Turkish as default
+          await AsyncStorage.setItem('userLanguage', 'tr');
         }
       } catch (error) {
         console.error('Error loading language:', error);
@@ -49,4 +52,4 @@ export const useLanguage = () => {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
-}; 
+};
