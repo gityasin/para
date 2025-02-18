@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MD3LightTheme, MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const lightTheme = {
   ...MD3LightTheme,
@@ -82,13 +83,44 @@ export function ThemeProvider({ children }) {
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
   const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+  // Load saved theme preference
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const userPrefs = await AsyncStorage.getItem('userPreferences');
+        if (userPrefs) {
+          const { theme } = JSON.parse(userPrefs);
+          setIsDarkMode(theme === 'dark');
+        }
+      } catch (error) {
+        console.error('Error loading theme preference:', error);
+      }
+    };
+    loadThemePreference();
+  }, []);
+
+  const toggleTheme = async () => {
+    try {
+      const newIsDarkMode = !isDarkMode;
+      setIsDarkMode(newIsDarkMode);
+      
+      // Save to preferences and update theme
+      const userPrefs = await AsyncStorage.getItem('userPreferences');
+      const preferences = userPrefs ? JSON.parse(userPrefs) : {};
+      await AsyncStorage.setItem('userPreferences', JSON.stringify({
+        ...preferences,
+        theme: newIsDarkMode ? 'dark' : 'light'
+      }));
+    } catch (error) {
+      console.error('Error saving theme preference:', error);
+    }
   };
 
   return (
     <ThemeContext.Provider value={{ theme: currentTheme, isDarkMode, toggleTheme }}>
-      <PaperProvider theme={currentTheme}>{children}</PaperProvider>
+      <PaperProvider theme={currentTheme}>
+        {children}
+      </PaperProvider>
     </ThemeContext.Provider>
   );
 }
@@ -101,4 +133,4 @@ export function useAppTheme() {
     throw new Error('useAppTheme must be used within a ThemeProvider');
   }
   return context;
-} 
+}

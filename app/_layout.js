@@ -77,15 +77,13 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <AppThemeProvider>
-      <PaperProvider>
-        <LanguageProvider>
-          <TransactionsProvider>
-            <CategoriesProvider>
-              <RootLayoutContent />
-            </CategoriesProvider>
-          </TransactionsProvider>
-        </LanguageProvider>
-      </PaperProvider>
+      <LanguageProvider>
+        <TransactionsProvider>
+          <CategoriesProvider>
+            <RootLayoutContent />
+          </CategoriesProvider>
+        </TransactionsProvider>
+      </LanguageProvider>
     </AppThemeProvider>
   );
 }
