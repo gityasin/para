@@ -83,7 +83,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
-        data={state.transactions}
+        data={[...state.transactions].reverse()}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TransactionItem 
