@@ -150,7 +150,7 @@ export default function AddTransactionScreen() {
     setTimeout(() => {
       setShowSnackbar(false);
       router.back();
-    }, 1500);
+    }, 750);
   };
 
   return (
