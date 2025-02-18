@@ -87,6 +87,14 @@ export default function TransactionItem({ transaction, onPress }) {
             )}
             right={props => (
               <View style={styles.rightContainer}>
+                {transaction.isRecurring && (
+                  <MaterialCommunityIcons
+                    name="refresh"
+                    size={16}
+                    color={colors.primary}
+                    style={styles.recurringIcon}
+                  />
+                )}
                 <Text
                   {...props}
                   variant="titleMedium"
@@ -200,5 +208,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 8,
     zIndex: 3,
+  },
+  recurringIcon: {
+    marginRight: 4,
   },
 });

@@ -9,6 +9,7 @@ export const translations = {
     delete: 'Delete',
     close: 'Close',
     update: 'Update',
+    saveChanges: 'Save Changes',
     
     // Settings Screen
     appSettings: 'App Settings',
@@ -86,6 +87,10 @@ export const translations = {
     tabHome: 'Home',
     tabCharts: 'Charts',
     tabSettings: 'Settings',
+
+    // Notification Messages
+    notificationPermissionRequired: 'Notification permission is required to enable reminders',
+    notificationError: 'There was an error managing notifications. Please try again.',
   },
   tr: {
     // General
@@ -97,6 +102,7 @@ export const translations = {
     delete: 'Sil',
     close: 'Kapat',
     update: 'Güncelle',
+    saveChanges: 'Değişiklikleri Kaydet',
     
     // Settings Screen
     appSettings: 'Uygulama Ayarları',
@@ -174,5 +180,9 @@ export const translations = {
     tabHome: 'Ana Sayfa',
     tabCharts: 'Grafikler',
     tabSettings: 'Ayarlar',
+
+    // Notification Messages
+    notificationPermissionRequired: 'Hatırlatıcıları etkinleştirmek için bildirim izni gerekli',
+    notificationError: 'Bildirimleri yönetirken bir hata oluştu. Lütfen tekrar deneyin.',
   }
-}; 
+};

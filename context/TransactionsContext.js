@@ -15,13 +15,23 @@ function transactionsReducer(state, action) {
       return { ...state, transactions: action.payload };
     case 'ADD_TRANSACTION':
       console.log("Adding transaction:", action.payload);
-      return { ...state, transactions: [...state.transactions, action.payload] };
+      return { 
+        ...state, 
+        transactions: [...state.transactions, {
+          ...action.payload,
+          isRecurring: Boolean(action.payload.isRecurring)
+        }] 
+      };
     case 'UPDATE_TRANSACTION':
       console.log("Updating transaction:", action.payload);
       return {
         ...state,
         transactions: state.transactions.map(tx =>
-          tx.id === action.payload.id ? action.payload : tx
+          tx.id === action.payload.id ? {
+            ...tx,
+            ...action.payload,
+            isRecurring: Boolean(action.payload.isRecurring)  // Ensure boolean conversion
+          } : tx
         ),
       };
     case 'DELETE_TRANSACTION':

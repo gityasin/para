@@ -78,8 +78,9 @@ export default function AddTransactionScreen() {
       setDescription(existingTransaction.description || '');
       setAmount(existingTransaction.amount ? Math.abs(existingTransaction.amount).toString() : '');
       setCategory(existingTransaction.category || '');
-      setIsRecurring(Boolean(existingTransaction.isRecurring));
       setTransactionType(existingTransaction.amount < 0 ? 'expense' : 'income');
+      // Fix: Properly set isRecurring from existingTransaction, with explicit boolean conversion
+      setIsRecurring(Boolean(existingTransaction.isRecurring));
     }
   }, [isEditing, existingTransaction]);
 
@@ -118,7 +119,7 @@ export default function AddTransactionScreen() {
     const transactionData = {
       description: description.trim(),
       amount: finalAmount,
-      date: new Date().toISOString().split('T')[0],
+      date: isEditing ? existingTransaction.date : new Date().toISOString().split('T')[0],
       category: trimmedCategory,
       isRecurring,
       type: transactionType,
@@ -128,8 +129,10 @@ export default function AddTransactionScreen() {
       dispatch({
         type: 'UPDATE_TRANSACTION',
         payload: {
-          id: existingTransaction.id,
+          ...existingTransaction,
           ...transactionData,
+          id: existingTransaction.id,
+          isRecurring: isRecurring // Ensure isRecurring is explicitly set
         },
       });
     } else {
@@ -246,10 +249,11 @@ export default function AddTransactionScreen() {
           </HelperText>
 
           <View style={styles.switchContainer}>
-            <Text variant="bodyLarge">{t('recurringMonthly')}</Text>
+            <Text variant="bodyLarge" style={{ color: colors.text }}>{t('recurringMonthly')}</Text>
             <Switch
               value={isRecurring}
               onValueChange={setIsRecurring}
+              color={colors.primary}
             />
           </View>
 

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Modal as RNModal, Platform } from 'react-native';
 import { List, Switch, Divider, Text, Surface, useTheme, Button, TextInput, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { scheduleDailyReminder } from '../../notifications/NotificationsService';
+import { scheduleDailyReminder, cancelAllNotifications, getAllScheduledNotifications } from '../../notifications/NotificationsService';
 import { useAppTheme } from '../../theme/theme';
 import { getAvailableCurrencies } from '../../services/format';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTransactions } from '../../context/TransactionsContext';
 import { useCategories } from '../../context/CategoriesContext';
 import { useLanguage } from '../../context/LanguageContext';
+import * as Notifications from 'expo-notifications';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -29,11 +30,63 @@ export default function SettingsScreen() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [editedCategory, setEditedCategory] = useState('');
 
-  const handleNotificationToggle = async () => {
-    if (!notificationsEnabled) {
-      await scheduleDailyReminder();
+  // Add useEffect to load notification settings
+  useEffect(() => {
+    loadNotificationSettings();
+  }, []);
+
+  const loadNotificationSettings = async () => {
+    try {
+      // Check both stored setting and actual scheduled notifications
+      const [notificationSetting, scheduledNotifications] = await Promise.all([
+        AsyncStorage.getItem('notificationsEnabled'),
+        getAllScheduledNotifications()
+      ]);
+      
+      // Consider notifications enabled if there are scheduled notifications
+      // or if the setting is explicitly set to 'true'
+      const isEnabled = notificationSetting === 'true' || scheduledNotifications.length > 0;
+      setNotificationsEnabled(isEnabled);
+      
+      // Sync the storage with actual state if they don't match
+      if (isEnabled && notificationSetting !== 'true') {
+        await AsyncStorage.setItem('notificationsEnabled', 'true');
+      } else if (!isEnabled && notificationSetting === 'true') {
+        await AsyncStorage.setItem('notificationsEnabled', 'false');
+      }
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
     }
-    setNotificationsEnabled(!notificationsEnabled);
+  };
+
+  const handleNotificationToggle = async () => {
+    try {
+      if (!notificationsEnabled) {
+        // Attempt to schedule the reminder
+        await scheduleDailyReminder();
+        
+        // If we get here, it means the scheduling was successful
+        await AsyncStorage.setItem('notificationsEnabled', 'true');
+        setNotificationsEnabled(true);
+      } else {
+        // Cancel all notifications
+        await cancelAllNotifications();
+        await AsyncStorage.setItem('notificationsEnabled', 'false');
+        setNotificationsEnabled(false);
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      
+      // Show more specific error message based on the error
+      if (error.message === 'Notification permissions not granted') {
+        alert(t('notificationPermissionRequired'));
+      } else {
+        alert(t('notificationError'));
+      }
+      
+      // Ensure the switch state matches reality
+      loadNotificationSettings();
+    }
   };
 
   const handleCurrencySelect = async (currencyCode) => {
