@@ -31,16 +31,12 @@ export default function ChartScreen() {
 
   const sortedChartData = Object.entries(expensesByCategory)
     .sort(([, a], [, b]) => b - a)
-    .map(([category, amount], index, array) => {
-      // Add a tiny fraction based on position to ensure perfect fitting
-      const adjustedAmount = amount * (1 + (index / (array.length * 1000)));
-      return {
-        x: category,
-        y: adjustedAmount,
-        originalAmount: amount,
-        color: getCategoryColor(category)
-      };
-    });
+    .map(([category, amount]) => ({
+      x: category,
+      y: amount,
+      originalAmount: amount,
+      color: getCategoryColor(category)
+    }));
 
   // Use originalAmount for total and percentage calculations
   const total = sortedChartData.reduce((sum, item) => sum + item.originalAmount, 0);
@@ -100,6 +96,7 @@ export default function ChartScreen() {
     <ScrollView 
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
     >
       <Text variant="headlineMedium" style={[styles.title, { color: colors.text, textAlign: 'center', width: '100%' }]}>
         {t('expenseBreakdown')}
@@ -122,31 +119,31 @@ export default function ChartScreen() {
         
         {total > 0 ? (
           <>
-            <VictoryPie
-              data={sortedChartData.map(item => ({
-                ...item,
-                y: item.y + 0.0001
-              }))}
-              colorScale={sortedChartData.map(item => item.color)}
-              innerRadius={chartType === 'donut' ? 70 : 0}
-              radius={138}
-              padAngle={1.2}
-              cornerRadius={0}
-              labels={() => null}
-              animate={{
-                duration: 1000,
-                onLoad: { duration: 500 }
-              }}
-              height={300}
-              width={Math.min(350, Dimensions.get('window').width - 40)}
-              style={{
-                data: {
-                  stroke: colors.background,
-                  strokeWidth: 2,
-                  fillOpacity: 1
-                },
-              }}
-            />
+            <View style={styles.chartWrapper}>
+              <VictoryPie
+                data={sortedChartData}
+                colorScale={sortedChartData.map(item => item.color)}
+                innerRadius={chartType === 'donut' ? 65 : 0}
+                radius={120}
+                padAngle={sortedChartData.length > 1 ? 1 : 0}
+                cornerRadius={0}
+                labels={() => null}
+                animate={{
+                  duration: 400,
+                  easing: "quadInOut",
+                  onLoad: { duration: 400 }
+                }}
+                height={260}
+                width={260}
+                style={{
+                  data: {
+                    stroke: colors.background,
+                    strokeWidth: 2,
+                    fillOpacity: 1
+                  },
+                }}
+              />
+            </View>
           </>
         ) : (
           renderEmptyState()
@@ -253,5 +250,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 260,
+    overflow: 'hidden'
   },
 });
