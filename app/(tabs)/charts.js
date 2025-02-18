@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Text, Surface, useTheme, SegmentedButtons } from 'react-native-paper';
-import { VictoryPie, VictoryLabel } from 'victory-native';
+import { VictoryPie } from 'victory-native';
 import { useTransactions } from '../../context/TransactionsContext';
 import { formatCurrency } from '../../services/format';
 import { useLanguage } from '../../context/LanguageContext';
@@ -32,7 +32,6 @@ export default function ChartScreen() {
   const chartData = Object.entries(expensesByCategory).map(([category, amount]) => ({
     x: category,
     y: amount,
-    label: `${category}\n${((amount / total) * 100).toFixed(1)}%`,
   }));
 
   const colorScale = [
@@ -60,12 +59,12 @@ export default function ChartScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.contentContainer}
     >
-      <Text variant="headlineMedium" style={[styles.title, { color: colors.text }]}>
+      <Text variant="headlineMedium" style={[styles.title, { color: colors.text, textAlign: 'center', width: '100%' }]}>
         {t('expenseBreakdown')}
       </Text>
       
-      <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={2}>
-        <Text variant="titleLarge" style={[styles.totalAmount, { color: colors.error }]}>
+      <Surface style={[styles.chartContainer, { backgroundColor: colors.surface, width: '100%' }]} elevation={2}>
+        <Text variant="titleLarge" style={[styles.totalAmount, { color: colors.error, textAlign: 'center', width: '100%' }]}>
           {t('totalSpent')}: {formatCurrency(total, selectedCurrency)}
         </Text>
 
@@ -98,11 +97,6 @@ export default function ChartScreen() {
                   strokeWidth: 1,
                 },
               }}
-              labelComponent={
-                <VictoryLabel
-                  style={[{ fill: colors.text }]}
-                />
-              }
             />
 
             <View style={styles.legendContainer}>
@@ -134,9 +128,12 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 32,
+    alignItems: 'center',
+    width: '100%',
   },
   title: {
     marginBottom: 16,
+    width: '100%',
   },
   chartContainer: {
     padding: 16,

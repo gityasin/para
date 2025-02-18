@@ -109,12 +109,21 @@ export default function HomeScreen() {
           <MaterialCommunityIcons
             name="plus"
             size={24}
-            color={theme.colors.surface}
+            color={theme.colors.onPrimary}
           />
         )}
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        style={[styles.fab, { 
+          backgroundColor: theme.colors.primary,
+        }]}
         onPress={() => router.push('/add-transaction')}
         label={t('addTransaction')}
+        labelStyle={{ color: theme.colors.onPrimary }}
+        theme={{
+          colors: {
+            primaryContainer: theme.colors.primary,
+            onPrimaryContainer: theme.colors.onPrimary,
+          }
+        }}
       />
     </View>
   );

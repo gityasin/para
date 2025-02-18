@@ -8,6 +8,7 @@ const lightTheme = {
   colors: {
     ...MD3LightTheme.colors,
     primary: '#3B82F6',
+    onPrimary: '#FFFFFF',
     secondary: '#F59E0B',
     background: '#FFFFFF',
     surface: '#F3F4F6',
@@ -18,6 +19,7 @@ const lightTheme = {
     warning: '#F59E0B',
     info: '#3B82F6',
     border: '#E5E7EB',
+    surfaceContainer: '#F3F4F6',
   },
   spacing: {
     xs: 4,
@@ -56,6 +58,7 @@ const darkTheme = {
   colors: {
     ...MD3DarkTheme.colors,
     primary: '#60A5FA',
+    onPrimary: '#FFFFFF',
     secondary: '#FBBF24',
     background: '#111827',
     surface: '#1F2937',
