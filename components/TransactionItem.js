@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, Pressable, Platform } from 'react-native';
 import { Surface, Text, List, useTheme, Button, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTransactions } from '../context/TransactionsContext';
@@ -24,6 +24,7 @@ const TransactionItem = ({ transaction }) => {
   const { getCategoryColor } = useCategories();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const [menuButtonHovered, setMenuButtonHovered] = useState(false);
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -58,6 +59,9 @@ const TransactionItem = ({ transaction }) => {
   };
 
   const handleMenuPress = (event) => {
+    if (event) {
+      event.stopPropagation();
+    }
     if (Platform.OS === 'web') {
       const rect = event.currentTarget.getBoundingClientRect();
       const scrollY = window.scrollY || window.pageYOffset;
@@ -72,7 +76,13 @@ const TransactionItem = ({ transaction }) => {
   return (
     <Surface style={styles.surface} elevation={1}>
       <View style={styles.container}>
-        <View style={{ flex: 1 }}>
+        <Pressable 
+          onPress={handleEdit}
+          style={({ hovered }) => [
+            styles.transactionPress,
+            hovered && styles.transactionPressHovered
+          ]}
+        >
           <List.Item
             title={transaction.description}
             description={`${transaction.category} • ${formattedDate}`}
@@ -109,27 +119,31 @@ const TransactionItem = ({ transaction }) => {
             titleStyle={styles.title}
             descriptionStyle={[styles.description, { color: colors.textSecondary }]}
           />
-        </View>
+        </Pressable>
 
-        <TouchableOpacity 
+        <Pressable 
           onPress={handleMenuPress}
-          style={styles.menuButton}
+          style={[
+            styles.menuButton,
+            menuButtonHovered && styles.menuButtonHovered
+          ]}
+          onHoverIn={() => setMenuButtonHovered(true)}
+          onHoverOut={() => setMenuButtonHovered(false)}
         >
           <MaterialCommunityIcons
             name="dots-vertical"
             size={24}
             color={colors.primary}
           />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <Portal>
         {menuVisible && (
           <>
-            <TouchableOpacity 
+            <Pressable 
               style={styles.backdrop} 
               onPress={() => setMenuVisible(false)} 
-              activeOpacity={1}
             />
             <View 
               style={[
@@ -141,8 +155,11 @@ const TransactionItem = ({ transaction }) => {
                 }
               ]}
             >
-              <TouchableOpacity 
-                style={styles.dropdownItem}
+              <Pressable 
+                style={({hovered}) => [
+                  styles.dropdownItem,
+                  hovered && styles.dropdownItemHovered
+                ]}
                 onPress={() => {
                   handleEdit();
                   setMenuVisible(false);
@@ -150,9 +167,12 @@ const TransactionItem = ({ transaction }) => {
               >
                 <MaterialCommunityIcons name="pencil" size={20} color={colors.primary} />
                 <Text style={[styles.dropdownText, { color: colors.text }]}>{t('edit')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.dropdownItem}
+              </Pressable>
+              <Pressable 
+                style={({hovered}) => [
+                  styles.dropdownItem,
+                  hovered && styles.dropdownItemHovered
+                ]}
                 onPress={() => {
                   handleDelete();
                   setMenuVisible(false);
@@ -160,7 +180,7 @@ const TransactionItem = ({ transaction }) => {
               >
                 <MaterialCommunityIcons name="delete" size={20} color={colors.error} />
                 <Text style={[styles.dropdownText, { color: colors.text }]}>{t('delete')}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </>
         )}
@@ -201,6 +221,14 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 8,
     marginRight: 4,
+    borderRadius: 20,
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer',
+      transition: 'background-color 0.2s ease',
+    } : {}),
+  },
+  menuButtonHovered: {
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   backdrop: {
     position: 'fixed',
@@ -233,10 +261,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     gap: 8,
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer',
+      transition: 'background-color 0.2s ease',
+    } : {}),
+  },
+  dropdownItemHovered: {
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   dropdownText: {
     fontSize: 16,
     marginLeft: 8,
+  },
+  transactionPress: {
+    flex: 1,
+    borderRadius: 8,
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    } : {}),
+  },
+  transactionPressHovered: {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    transform: [{scale: 1.002}],
   },
 });
 
